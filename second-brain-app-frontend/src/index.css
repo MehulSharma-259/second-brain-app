@@ -1,0 +1,14 @@
+/** @format */
+
+@import "tailwindcss";
+
+@theme {
+  --color-button-primary: #5146e4;
+  --color-button-primary-t: #eaebfc;
+  --color-button-secondary: #e0e7ff;
+  --color-button-secondary-t: #4b41cd;
+  --color-sidebar-t: #1f2837;
+  --color-all-t: #a0a5ab;
+  --color-heading-t: #1f2837;
+  --color-border: #ebebec;
+}

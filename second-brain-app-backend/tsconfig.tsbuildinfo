@@ -1,0 +1,1 @@
+{"root":["./src/db.ts","./src/index.ts","./src/middlewares/auth.ts","./src/utils/dbconnection.ts","./src/utils/interfaces.ts","./src/utils/jwt.ts"],"version":"5.9.2"}
