@@ -2,10 +2,9 @@
 
 import {TextIcon} from "../icons/TextIcon";
 import {ShareIcon} from "../icons/ShareIcon";
-import {DeleteIcon}from "../icons/DeleteIcon";
+import {DeleteIcon} from "../icons/DeleteIcon";
 import axios from "axios";
 import {DB_URL} from "../../../config";
-// import { useEffect } from "react"; // <-- REMOVE this import
 
 export interface CardProps {
   _id: string;
@@ -14,11 +13,6 @@ export interface CardProps {
   type: "twitter" | "youtube";
   onDelete: () => void;
 }
-
-// We can remove the window.twttr declaration, as it's now in Dashboard.tsx
-// declare global {
-//   ...
-// }
 
 export function Cards({_id, title, link, type, onDelete}: CardProps) {
   
@@ -35,9 +29,6 @@ export function Cards({_id, title, link, type, onDelete}: CardProps) {
       alert("Failed to delete. Please try again.");
     }
   }
-
-  // --- REMOVED useEffect for Twitter embeds ---
-  // The Dashboard component will now handle this.
 
   return (
     <>
@@ -74,11 +65,10 @@ export function Cards({_id, title, link, type, onDelete}: CardProps) {
             ></iframe>
           )}
 
-          {/* This JSX remains the same. The useEffect in Dashboard will find this. */}
           {type === "twitter" && (
-            <div className="px-2 min-h-[200px]"> 
+            <div className="px-2 min-h-[200px]">
               <blockquote className="twitter-tweet" data-dnt="true" data-theme="light">
-                <a href={link}>Loading Tweet...</a>
+                <a href={link.replace('x.com', 'twitter.com')}>Loading Tweet...</a>
               </blockquote>
             </div>
           )}

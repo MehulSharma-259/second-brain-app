@@ -11,8 +11,6 @@ type ContentType = "youtube" | "twitter";
 
 /**
  * Extracts a YouTube video ID from various URL formats.
- * @param url The YouTube URL
- * @returns The 11-character video ID, or null if not found.
  */
 function getYoutubeVideoId(url: string): string | null {
   const regex =
@@ -22,19 +20,33 @@ function getYoutubeVideoId(url: string): string | null {
 }
 
 /**
- * Ensures a Twitter/X URL is in a valid format.
- * @param url The Twitter/X URL
- * @returns A standardized https URL, or null if invalid.
+ * Ensures a Twitter/X URL is in a valid format and extracts the tweet ID.
+ * Returns the full tweet URL (NOT the embed URL)
  */
 function normalizeTwitterLink(url: string): string | null {
   try {
-    const parsedUrl = new URL(url.startsWith("http") ? url : `https://${url}`);
-    if (parsedUrl.hostname === "twitter.com" || parsedUrl.hostname === "x.com") {
-      // Return the full URL
-      return parsedUrl.href;
+    // Add https if not present
+    const urlToProcess = url.startsWith("http") ? url : `https://${url}`;
+    const parsedUrl = new URL(urlToProcess);
+    
+    // Check if it's twitter.com or x.com
+    if (parsedUrl.hostname === "twitter.com" || 
+        parsedUrl.hostname === "www.twitter.com" ||
+        parsedUrl.hostname === "x.com" || 
+        parsedUrl.hostname === "www.x.com") {
+      
+      // Extract tweet ID from the path
+      // Path format: /username/status/tweetId or /i/web/status/tweetId
+      const pathMatch = parsedUrl.pathname.match(/\/status\/(\d+)/);
+      
+      if (pathMatch && pathMatch[1]) {
+        // Return the full URL (Twitter widget needs the full URL, not embed URL)
+        return parsedUrl.href;
+      }
     }
     return null;
   } catch (e) {
+    console.error("Error parsing Twitter URL:", e);
     return null;
   }
 }
@@ -57,7 +69,6 @@ export function CreateContentModal({open, onClose, onContentAdded}: any) {
 
     let finalLink: string | null = null;
 
-    // --- LINK NORMALIZATION LOGIC ---
     if (type === "youtube") {
       const videoId = getYoutubeVideoId(originalLink);
       if (videoId) {
@@ -69,11 +80,10 @@ export function CreateContentModal({open, onClose, onContentAdded}: any) {
     } else if (type === "twitter") {
       finalLink = normalizeTwitterLink(originalLink);
       if (!finalLink) {
-        setError("Invalid Twitter/X URL. Please use a 'twitter.com' or 'x.com' link.");
+        setError("Invalid Twitter/X URL. Please provide a valid tweet URL (e.g., https://twitter.com/user/status/123... or https://x.com/user/status/123...)");
         return;
       }
     }
-    // --- END NORMALIZATION ---
 
     if (!finalLink) {
       setError("An unknown error occurred with the link.");
@@ -85,15 +95,16 @@ export function CreateContentModal({open, onClose, onContentAdded}: any) {
         `${DB_URL}/api/v1/content`,
         {
           title,
-          link: finalLink, // Send the normalized link
+          link: finalLink,
           type,
         },
         {
           withCredentials: true,
         }
       );
-      onContentAdded(); // Call the refetch function
-      
+      console.log("Content created:", response.data);
+      onContentAdded();
+      handleClose();
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || "An error occurred.");
     }
@@ -109,8 +120,8 @@ export function CreateContentModal({open, onClose, onContentAdded}: any) {
   return (
     <>
       {open && (
-        <div className="w-screen h-screen bg-black/70 fixed top-0 left-0 flex items-center justify-center ">
-          <div className="flex flex-col justify-center ">
+        <div className="w-screen h-screen bg-black/70 fixed top-0 left-0 flex items-center justify-center z-50">
+          <div className="flex flex-col justify-center">
             <span className="bg-white p-4 rounded-xl w-96">
               <div
                 className="flex justify-end cursor-pointer"
@@ -118,10 +129,9 @@ export function CreateContentModal({open, onClose, onContentAdded}: any) {
               >
                 <CrossIcon />
               </div>
-              <div className="flex flex-col justify-center items-center"></div>
               <div className="flex flex-col">
                 <Input placeholder="Title" reference={titleRef} />
-                <Input placeholder="Link (e.g., youtu.be/... or x.com/...)" reference={linkRef} />
+                <Input placeholder="Link" reference={linkRef} />
               </div>
 
               <div className="flex gap-3 justify-center m-4">
@@ -132,17 +142,13 @@ export function CreateContentModal({open, onClose, onContentAdded}: any) {
                   variant={type === "youtube" ? "primary" : "secondary"}
                   size="sm"
                   text="Youtube"
-                  onClick={() => {
-                    setType("youtube");
-                  }}
+                  onClick={() => setType("youtube")}
                 />
                 <Button
                   variant={type === "twitter" ? "primary" : "secondary"}
                   size="sm"
                   text="Twitter"
-                  onClick={() => {
-                    setType("twitter");
-                  }}
+                  onClick={() => setType("twitter")}
                 />
               </div>
               
