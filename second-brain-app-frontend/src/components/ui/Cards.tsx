@@ -2,26 +2,42 @@
 
 import {TextIcon} from "../icons/TextIcon";
 import {ShareIcon} from "../icons/ShareIcon";
-import {DeleteIcon} from "../icons/DeleteIcon";
+import {DeleteIcon}from "../icons/DeleteIcon";
 import axios from "axios";
 import {DB_URL} from "../../../config";
+// import { useEffect } from "react"; // <-- REMOVE this import
 
 export interface CardProps {
   _id: string;
   title: string;
   link: string;
   type: "twitter" | "youtube";
+  onDelete: () => void;
 }
 
-export function Cards({_id, title, link, type}: CardProps) {
-  async function deleteCard() {
-    const res = await axios.delete(`${DB_URL}/api/v1/content`, {
-      data: {contentId: _id},
-      withCredentials: true,
-    });
+// We can remove the window.twttr declaration, as it's now in Dashboard.tsx
+// declare global {
+//   ...
+// }
 
-    console.log("ye hai es");
+export function Cards({_id, title, link, type, onDelete}: CardProps) {
+  
+  async function deleteCard() {
+    try {
+      const res = await axios.delete(`${DB_URL}/api/v1/content`, {
+        data: {contentId: _id},
+        withCredentials: true,
+      });
+      console.log("Deleted:", res.data.record);
+      onDelete(); 
+    } catch (err: any) {
+      console.error("Failed to delete card:", err.message);
+      alert("Failed to delete. Please try again.");
+    }
   }
+
+  // --- REMOVED useEffect for Twitter embeds ---
+  // The Dashboard component will now handle this.
 
   return (
     <>
@@ -36,7 +52,7 @@ export function Cards({_id, title, link, type}: CardProps) {
             </div>
 
             <div className="flex gap-1 items-center text-all-t">
-              <a href={link} target="_blank">
+              <a href={link} target="_blank" rel="noopener noreferrer">
                 <ShareIcon />
               </a>
               <div className="cursor-pointer" onClick={deleteCard}>
@@ -50,7 +66,7 @@ export function Cards({_id, title, link, type}: CardProps) {
           {type === "youtube" && (
             <iframe
               className="w-full"
-              src={link.replace("watch?v=", "embed/")}
+              src={link} 
               title="YouTube video player"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               referrerPolicy="strict-origin-when-cross-origin"
@@ -58,16 +74,13 @@ export function Cards({_id, title, link, type}: CardProps) {
             ></iframe>
           )}
 
+          {/* This JSX remains the same. The useEffect in Dashboard will find this. */}
           {type === "twitter" && (
-            <>
-              <blockquote className="twitter-tweet">
-                <a href={link}></a>
-                <script
-                  async
-                  src="https://platform.twitter.com/widgets.js"
-                ></script>
-              </blockquote>{" "}
-            </>
+            <div className="px-2 min-h-[200px]"> 
+              <blockquote className="twitter-tweet" data-dnt="true" data-theme="light">
+                <a href={link}>Loading Tweet...</a>
+              </blockquote>
+            </div>
           )}
         </div>
       </div>
