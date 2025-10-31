@@ -1,5 +1,5 @@
 /** @format */
-import {useState, useEffect} from "react";
+import {useState, useEffect, useMemo} from "react"; // Import useMemo
 import {PlusIcon} from "../components/icons/PlusIcon";
 import {ShareIcon} from "../components/icons/ShareIcon";
 import {Button} from "../components/ui/Button";
@@ -18,9 +18,14 @@ declare global {
   }
 }
 
+// Define the filter type
+export type ContentFilter = "all" | "twitter" | "youtube";
+
 export function Dashboard() {
   const [modalOpen, setModalOpen] = useState(false);
   const [contents, setContents, refetchContents] = useContents();
+  // Add state for filtering
+  const [filter, setFilter] = useState<ContentFilter>("all");
 
   const handleContentAdded = () => {
     setModalOpen(false);
@@ -31,32 +36,38 @@ export function Dashboard() {
     refetchContents();
   };
 
-  // Load Twitter widgets whenever contents change
+  // Memoize the filtered content
+  const filteredContents = useMemo(() => {
+    if (filter === "all") {
+      return contents;
+    }
+    return contents.filter(content => content.type === filter);
+  }, [contents, filter]);
+
+  // Load Twitter widgets whenever filtered contents change
   useEffect(() => {
-    const hasTwitterCards = contents?.some(content => content.type === 'twitter');
+    const hasTwitterCards = filteredContents?.some(content => content.type === 'twitter');
     
     if (hasTwitterCards) {
-      // Wait for twttr to be available
       const loadTwitterWidgets = () => {
         if (window.twttr && window.twttr.widgets) {
           console.log("Loading Twitter widgets...");
           window.twttr.widgets.load();
         } else {
-          // If twttr not loaded yet, wait and try again
           console.log("Waiting for Twitter widget script...");
           setTimeout(loadTwitterWidgets, 100);
         }
       };
-
-      // Small delay to ensure DOM is updated
+      // Delay to ensure DOM is updated
       setTimeout(loadTwitterWidgets, 100);
     }
-  }, [contents]);
+  }, [filteredContents]); // Depend on filteredContents
 
   return (
     <>
       <div>
-        <Sidebar />
+        {/* Pass filter state and setter to Sidebar */}
+        <Sidebar filter={filter} setFilter={setFilter} />
       </div>
 
       <div className="ml-72 p-4 bg-gray-200 min-h-screen">
@@ -81,8 +92,10 @@ export function Dashboard() {
           />
         </div>
 
-        <div className="flex gap-4 flex-wrap">
-          {contents?.map(({type, title, link, _id}) => (
+        {/* Use the responsive grid layout */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {/* Map over filteredContents instead of contents */}
+          {filteredContents?.map(({type, title, link, _id}) => (
             <Cards
               key={_id}
               _id={_id}
