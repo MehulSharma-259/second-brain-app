@@ -23,7 +23,7 @@ export type ContentFilter = "all" | "twitter" | "youtube";
 
 export function Dashboard() {
   const [modalOpen, setModalOpen] = useState(false);
-  const [contents, setContents, refetchContents] = useContents();
+  const [contents, , refetchContents] = useContents();
   // Add state for filtering
   const [filter, setFilter] = useState<ContentFilter>("all");
 
