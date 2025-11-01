@@ -7,9 +7,11 @@ import {DB_URL} from "../../config";
 
 export function useContents() {
   const [contents, setContents] = useState<any[]>([]); // Default to empty array
+  const [isLoading, setIsLoading] = useState(true); // <-- 1. ADD THIS
   const navigate = useNavigate(); // Initialize navigate
 
   const fetchContents = useCallback(async () => {
+    setIsLoading(true); // <-- 2. SET LOADING TRUE
     try {
       const response = await axios.get(`${DB_URL}/api/v1/content`, {
         withCredentials: true,
@@ -23,6 +25,8 @@ export function useContents() {
       } else {
         console.error("Failed to fetch contents:", error.message);
       }
+    } finally {
+      setIsLoading(false); // <-- 3. SET LOADING FALSE IN ALL CASES
     }
   }, [navigate]); // Add navigate to dependency array
 
@@ -30,6 +34,6 @@ export function useContents() {
     fetchContents();
   }, [fetchContents]); // Run on mount
 
-  // Return contents, setContents, and the refetch function
-  return [contents, setContents, fetchContents] as const;
+  // 4. RETURN isLoading
+  return [contents, setContents, fetchContents, isLoading] as const;
 }

@@ -23,7 +23,10 @@ export type ContentFilter = "all" | "twitter" | "youtube";
 
 export function Dashboard() {
   const [modalOpen, setModalOpen] = useState(false);
-  const [contents, , refetchContents] = useContents();
+  
+  // --- 1. GET isLoading from the hook ---
+  const [contents, , refetchContents, isLoading] = useContents();
+  
   // Add state for filtering
   const [filter, setFilter] = useState<ContentFilter>("all");
 
@@ -63,6 +66,19 @@ export function Dashboard() {
     }
   }, [filteredContents]); // Depend on filteredContents
 
+  
+  // --- 2. ADD THIS CHECK ---
+  // While loading, show a loading screen.
+  // The hook will handle the redirect to /signin if auth fails.
+  if (isLoading) {
+    return (
+      <div className="h-screen bg-gray-200 flex justify-center items-center">
+        <p className="text-xl font-medium">Loading...</p>
+      </div>
+    );
+  }
+
+  // --- 3. If not loading, render the dashboard ---
   return (
     <>
       <div>
