@@ -62,7 +62,7 @@ A full-stack application that allows users to save and organize their favorite c
 ### 1. Clone the Repository
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/MehulSharma-259/second-brain-app.git
 cd second-brain-app
 ```
 
