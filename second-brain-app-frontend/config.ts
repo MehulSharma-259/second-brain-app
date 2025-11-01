@@ -1,1 +1,1 @@
-export const DB_URL = "http://localhost:8000"
+export const DB_URL = import.meta.env.VITE_DB_URL || "http://localhost:8000";

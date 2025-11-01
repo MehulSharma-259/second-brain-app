@@ -27,7 +27,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: "http://localhost:5173", // your frontend origin
+    origin: process.env.FRONTEND_URL, // your frontend origin
     credentials: true, // allow cookies
   })
 );
@@ -36,8 +36,14 @@ app.use(
 
 app.post("/api/v1/signup", async (req: Request, res: Response) => {
   const requiredBody = z.object({
-    firstName: z.string().min(5, "First name must be at least 5 characters").max(50),
-    lastName: z.string().min(5, "Last name must be at least 5 characters").max(50),
+    firstName: z
+      .string()
+      .min(5, "First name must be at least 5 characters")
+      .max(50),
+    lastName: z
+      .string()
+      .min(5, "Last name must be at least 5 characters")
+      .max(50),
     email: z.email("Invalid email address"),
     password: z
       .string()
@@ -45,7 +51,10 @@ app.post("/api/v1/signup", async (req: Request, res: Response) => {
       .max(20)
       .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
       .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-      .regex(/[@$!%*?&^#()[\]{}\-_=+<>]/, "Password must contain at least one special character"),
+      .regex(
+        /[@$!%*?&^#()[\]{}\-_=+<>]/,
+        "Password must contain at least one special character"
+      ),
   });
 
   const validateData = requiredBody.safeParse(req.body);
@@ -62,10 +71,10 @@ app.post("/api/v1/signup", async (req: Request, res: Response) => {
 
   try {
     // Check if user already exists
-    const existingUser = await UserModel.findOne({ email });
+    const existingUser = await UserModel.findOne({email});
     if (existingUser) {
       return res.status(403).json({
-        message: "User with this email already exists."
+        message: "User with this email already exists.",
       });
     }
 
@@ -80,14 +89,14 @@ app.post("/api/v1/signup", async (req: Request, res: Response) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      sameSite: "lax", 
+      sameSite: "lax",
     });
 
     return res.status(200).json({
       message: "signed up",
     });
   } catch (err: any) {
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({message: "Internal server error"});
   }
 });
 
@@ -120,7 +129,7 @@ app.post("/api/v1/signin", async (req: Request, res: Response) => {
       });
     }
   } catch (err: any) {
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({message: "Internal server error"});
   }
 });
 
@@ -131,7 +140,7 @@ app.post("/api/v1/logout", (req: Request, res: Response) => {
     expires: new Date(0), // Expire the cookie immediately
     sameSite: "lax",
   });
-  return res.status(200).json({ message: "Logged out" });
+  return res.status(200).json({message: "Logged out"});
 });
 // --- END NEW ENDPOINT ---
 
@@ -142,7 +151,7 @@ app.post(
     // Add validation for content
     const contentBody = z.object({
       // We validate the URL on the frontend now, so just check for a string
-      link: z.string().min(1, "Link cannot be empty"), 
+      link: z.string().min(1, "Link cannot be empty"),
       type: z.enum(["youtube", "twitter"]),
       title: z.string().min(1, "Title cannot be empty").max(100),
     });
@@ -167,13 +176,13 @@ app.post(
 
       return res.status(200).json({
         message: "content created",
-        content: newContent // Return the new content
+        content: newContent, // Return the new content
       });
     } catch (err: any) {
       // Check for duplicate key error (link or title)
       if (err.code === 11000) {
         return res.status(400).json({
-          message: "This link or title already exists in your brain."
+          message: "This link or title already exists in your brain.",
         });
       }
       return res.status(400).json({
@@ -216,7 +225,7 @@ app.delete(
     const contentId = req.body.contentId;
 
     if (!contentId) {
-      return res.status(400).json({ message: "Content ID is required" });
+      return res.status(400).json({message: "Content ID is required"});
     }
 
     try {
@@ -226,7 +235,9 @@ app.delete(
       });
 
       if (!deletedRecord) {
-        return res.status(404).json({ message: "Content not found or you don't have permission" });
+        return res
+          .status(404)
+          .json({message: "Content not found or you don't have permission"});
       }
 
       return res.status(200).json({
@@ -325,6 +336,4 @@ app.get(
   }
 );
 
-app.listen(process.env.PORT, () => {
-  console.log(`Server started at ${process.env.PORT}`);
-});
+export default app;
